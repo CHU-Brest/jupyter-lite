@@ -1,81 +1,74 @@
-# JupyterLite — kernels xeus Python & R (offline)
+# JupyterLite — Python (Pyodide) & R (xeus)
 
-Site JupyterLite (interface **JupyterLab**) entièrement statique, construit avec
-[`jupyterlite-xeus`](https://jupyterlite-xeus.readthedocs.io/). Deux kernels
-compilés en WebAssembly sont fournis :
+Site JupyterLite (interface **JupyterLab**) statique, avec deux kernels :
 
-- **Python (xeus-python)** avec `python-duckdb` (module `duckdb`), `pandas`,
-  `numpy`, `matplotlib`, `ipywidgets`.
-- **R (xeus-r)**.
+- **Python (Pyodide)** : `duckdb`, `polars`, `pandas`, `numpy`, etc. disponibles.
+  Les paquets sont chargés à la demande depuis le **CDN Pyodide (jsdelivr)** au
+  premier `import`.
+- **R (xeus-r)** : compilé en WebAssembly et **embarqué dans le site** au build.
 
-> ⚠️ **polars** n'est pas inclus : le projet Polars ne se compile pas encore en
-> WebAssembly / Emscripten (`polars-runtime-32` n'existe pas sur
-> emscripten-forge). **DuckDB** + **pandas** servent d'alternative côté
-> navigateur. Voir [pola-rs/polars#19211](https://github.com/pola-rs/polars/issues/19211).
+## Accès réseau : qui a besoin de quoi ?
 
-> 💡 **Tout fonctionne hors-ligne.** Au moment du build, tous les paquets conda
-> WebAssembly sont téléchargés depuis emscripten-forge **et empaquetés dans le
-> dossier `dist/`**. À l'exécution, le navigateur charge ces paquets depuis le
-> même hébergeur que le site : **aucun accès à `prefix.dev` n'est nécessaire**.
-> Les fichiers générés peuvent donc être servis depuis un GitLab interne isolé.
+| | Au **build** (GitHub Actions) | À l'**exécution** (navigateur) |
+|---|---|---|
+| **R (xeus-r)** | télécharge depuis emscripten-forge, **bundlé dans `dist/`** | rien (100% offline) |
+| **Python (Pyodide)** | rien | télécharge Pyodide + paquets depuis le **CDN jsdelivr** |
+
+> ✅ Le serveur (GitLab interne) n'a **jamais** besoin d'accéder à prefix.dev.
+> ⚠️ En revanche, pour le kernel **Python**, le **poste de l'utilisateur** doit
+> pouvoir joindre le CDN public `cdn.jsdelivr.net` (mais pas prefix.dev). Le
+> kernel **R** fonctionne lui totalement hors-ligne.
 
 ## Structure
 
 | Fichier | Rôle |
 |---|---|
-| `environment-python.yml` | Paquets du kernel Python (python-duckdb, pandas, …) |
-| `environment-r.yml` | Paquets du kernel R |
-| `jupyter_lite_config.json` | Déclare les deux environnements (= deux kernels) |
-| `.github/build-environment.yml` | Dépendances pour lancer le build en CI |
+| `environment-r.yml` | Paquets du kernel R (xeus-r) |
+| `jupyter_lite_config.json` | Indique à xeus le fichier d'environnement R |
+| `.github/build-environment.yml` | Dépendances de build (xeus + pyodide-kernel) |
 | `.github/workflows/deploy.yml` | Workflow GitHub Actions |
 | `content/` | Notebooks d'exemple inclus dans le site |
+
+Le kernel **Python (Pyodide)** est fourni par `jupyterlite-pyodide-kernel` ; il
+n'a pas de fichier d'environnement (les paquets viennent du CDN). Pour
+`duckdb`/`polars`, il suffit de faire `import duckdb` / `import polars` dans un
+notebook : Pyodide les charge automatiquement.
 
 ## Récupérer les fichiers statiques
 
 Le workflow `Build JupyterLite` se déclenche :
 
 - automatiquement à chaque push sur `main` ;
-- manuellement via **Actions → Build JupyterLite → Run workflow** (vous pouvez
-  choisir la branche source).
+- manuellement via **Actions → Build JupyterLite → Run workflow**.
 
 Il produit le site dans `dist/` puis :
 
 1. **Pousse le contenu sur la branche `gh-pages`** (réécrite à chaque build).
-   C'est cette branche que vous importez dans le GitLab interne.
-2. **Publie un artefact `jupyterlite-static`** (zip téléchargeable depuis la
-   page du run) — pratique pour récupérer les fichiers en une fois.
+2. **Publie un artefact `jupyterlite-static`** (zip téléchargeable).
 
 ## Héberger sur GitHub Pages (optionnel)
-
-La même branche `gh-pages` peut servir de source à GitHub Pages, sans rien
-changer au workflow :
 
 1. **Settings → Pages**
 2. **Source** : *Deploy from a branch*
 3. **Branch** : `gh-pages` / `(root)` → **Save**
 
-Le site sera disponible sur `https://<utilisateur>.github.io/<repo>/`. Comme il
-est servi sous un sous-chemin, le build inclut déjà tout en relatif — si jamais
-un asset ne se charge pas, reconstruisez avec
-`--base-url /<repo>/` (voir plus bas).
-
 ## Importer dans le GitLab interne
 
-1. Récupérez les fichiers (clone de la branche `gh-pages` ou téléchargement de
-   l'artefact zip).
+1. Récupérez les fichiers (clone de `gh-pages` ou artefact zip).
 2. Servez le contenu de façon statique (GitLab Pages, Nginx, etc.).
 3. Ouvrez `index.html` (ou `lab/index.html` pour aller directement dans Lab).
 
-> ℹ️ Si le site est servi sous un sous-chemin (ex.
-> `https://gitlab.interne/groupe/projet/`), les chemins relatifs de JupyterLite
-> fonctionnent généralement tels quels. En cas de souci, reconstruisez avec
-> `jupyter lite build --base-url /groupe/projet/ …`.
+> ℹ️ Sous un sous-chemin (ex. `https://gitlab.interne/groupe/projet/`), les
+> chemins relatifs de JupyterLite fonctionnent généralement tels quels. Sinon,
+> reconstruisez avec `jupyter lite build --base-url /groupe/projet/ …`.
 
-## Ajouter des paquets
+## Personnaliser
 
-- **Python** : ajoutez le nom du paquet dans `environment-python.yml` (doit
-  exister sur [emscripten-forge](https://emscripten-forge.org/)).
-- **R** : ajoutez `r-<paquet>` dans `environment-r.yml`.
+- **R** : ajoutez des paquets `r-<nom>` dans `environment-r.yml` (s'ils existent
+  sur [emscripten-forge](https://emscripten-forge.org/)).
+- **Python** : aucun fichier à modifier — installez à la volée dans un notebook
+  via `import` (paquets de la distribution Pyodide) ou
+  `import piplite; await piplite.install("mon_paquet")`.
 
 ## Build local (optionnel)
 
@@ -86,5 +79,6 @@ cp README.md content/
 jupyter lite build --contents content --output-dir dist
 ```
 
-> ⚠️ Le build local nécessite un accès réseau à `prefix.dev` /
-> emscripten-forge (uniquement pour la construction, pas pour l'exécution).
+> Note : Pyodide n'est **pas** embarqué (mode CDN). Pour un mode 100% offline
+> côté Python aussi, il faudrait embarquer la distribution Pyodide
+> (`--pyodide pyodide-0.29.3.tar.bz2`), ce qui alourdit fortement la sortie.
