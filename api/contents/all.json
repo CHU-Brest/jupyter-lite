@@ -1,0 +1,43 @@
+{
+  "content": [
+    {
+      "content": null,
+      "created": "2026-06-06T22:55:44.666772Z",
+      "format": null,
+      "hash": null,
+      "hash_algorithm": null,
+      "last_modified": "2026-06-06T22:55:28.757473Z",
+      "mimetype": null,
+      "name": "demo-python-duckdb-polars.ipynb",
+      "path": "demo-python-duckdb-polars.ipynb",
+      "size": 2015,
+      "type": "notebook",
+      "writable": true
+    },
+    {
+      "content": null,
+      "created": "2026-06-06T22:55:44.666449Z",
+      "format": null,
+      "hash": null,
+      "hash_algorithm": null,
+      "last_modified": "2026-06-06T22:55:43.575929Z",
+      "mimetype": "text/markdown",
+      "name": "README.md",
+      "path": "README.md",
+      "size": 2576,
+      "type": "file",
+      "writable": true
+    }
+  ],
+  "created": "2026-06-06T22:55:44.666772Z",
+  "format": "json",
+  "hash": null,
+  "hash_algorithm": null,
+  "last_modified": "2026-06-06T22:55:44.666772Z",
+  "mimetype": null,
+  "name": "",
+  "path": "",
+  "size": null,
+  "type": "directory",
+  "writable": true
+}
