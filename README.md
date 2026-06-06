@@ -4,9 +4,14 @@ Site JupyterLite (interface **JupyterLab**) entièrement statique, construit ave
 [`jupyterlite-xeus`](https://jupyterlite-xeus.readthedocs.io/). Deux kernels
 compilés en WebAssembly sont fournis :
 
-- **Python (xeus-python)** avec `duckdb`, `polars`, `pyarrow`, `pandas`,
+- **Python (xeus-python)** avec `python-duckdb` (module `duckdb`), `pandas`,
   `numpy`, `matplotlib`, `ipywidgets`.
 - **R (xeus-r)**.
+
+> ⚠️ **polars** n'est pas inclus : le projet Polars ne se compile pas encore en
+> WebAssembly / Emscripten (`polars-runtime-32` n'existe pas sur
+> emscripten-forge). **DuckDB** + **pandas** servent d'alternative côté
+> navigateur. Voir [pola-rs/polars#19211](https://github.com/pola-rs/polars/issues/19211).
 
 > 💡 **Tout fonctionne hors-ligne.** Au moment du build, tous les paquets conda
 > WebAssembly sont téléchargés depuis emscripten-forge **et empaquetés dans le
@@ -18,7 +23,7 @@ compilés en WebAssembly sont fournis :
 
 | Fichier | Rôle |
 |---|---|
-| `environment-python.yml` | Paquets du kernel Python (duckdb, polars, …) |
+| `environment-python.yml` | Paquets du kernel Python (python-duckdb, pandas, …) |
 | `environment-r.yml` | Paquets du kernel R |
 | `jupyter_lite_config.json` | Déclare les deux environnements (= deux kernels) |
 | `.github/build-environment.yml` | Dépendances pour lancer le build en CI |

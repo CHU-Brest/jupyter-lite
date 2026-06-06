@@ -9,11 +9,14 @@ dependencies:
   - xeus-python
   - python
   # --- Data / analytics ---
-  - duckdb
-  - polars
-  - pyarrow
+  # NB: le paquet s'appelle "python-duckdb" sur emscripten-forge
+  # (il fournit le module Python "duckdb").
+  - python-duckdb
   - pandas
   - numpy
   # --- Visualisation / widgets ---
   - matplotlib
   - ipywidgets
+  # NB: polars n'est PAS disponible en WebAssembly (le projet Polars ne
+  # supporte pas Emscripten, polars-runtime-32 n'existe pas sur
+  # emscripten-forge). DuckDB + pandas servent d'alternative cote navigateur.
