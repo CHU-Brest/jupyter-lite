@@ -1,0 +1,50 @@
+name: Build JupyterLite
+
+on:
+  # Build automatique quand on pousse sur main
+  push:
+    branches:
+      - main
+  # Permet de lancer le build manuellement depuis l'onglet "Actions"
+  # (et de choisir la branche source)
+  workflow_dispatch:
+
+# Nécessaire pour pousser le résultat sur la branche gh-pages
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Installer les dépendances de build
+        uses: mamba-org/setup-micromamba@v2
+        with:
+          environment-file: .github/build-environment.yml
+
+      - name: Construire le site statique JupyterLite
+        shell: bash -l {0}
+        run: |
+          cp README.md content/
+          jupyter lite build --contents content --output-dir dist
+
+      # Artefact téléchargeable (zip) : pratique pour récupérer les fichiers
+      # et les importer dans le GitLab interne.
+      - name: Publier l'artefact (zip téléchargeable)
+        uses: actions/upload-artifact@v4
+        with:
+          name: jupyterlite-static
+          path: dist
+
+      # Pousse le contenu de dist/ (fichiers statiques auto-suffisants) sur la
+      # branche gh-pages. C'est cette branche que vous importerez dans GitLab.
+      - name: Déployer les fichiers statiques sur la branche gh-pages
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./dist
+          publish_branch: gh-pages
+          force_orphan: true
