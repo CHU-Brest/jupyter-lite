@@ -1,10 +1,9 @@
-# Environnement utilisé UNIQUEMENT par le runner GitHub Actions pour lancer le
-# build. Ce n'est pas l'environnement des kernels.
+# Environnement utilisé UNIQUEMENT par le runner GitHub Actions pour le build.
 #
-# - jupyterlite-xeus           : construit le kernel R (xeus-r), bundlé offline
-# - jupyterlite-pyodide-kernel : ajoute le kernel Python (Pyodide, via CDN)
-#
-# Versions alignées : pyodide-kernel 0.7.x <-> jupyterlite-core 0.7.x <-> Pyodide 0.29.3
+# Site Python seul, propulsé par le kernel Pyodide.
+# IMPORTANT : on épingle Pyodide 0.27 (via pyodide-kernel 0.6.x) car c'est la
+# seule série Pyodide qui embarque duckdb ET polars (retirés en Pyodide 0.28+).
+#   jupyterlite-pyodide-kernel 0.6.x  <->  jupyterlite-core 0.6.x  <->  Pyodide 0.27.6
 name: build-env
 channels:
   - conda-forge
@@ -12,7 +11,5 @@ dependencies:
   - python
   - pip
   - jupyter_server
-  - jupyterlite-core >=0.7.5,<0.8
-  - jupyterlite-xeus >=4.3
-  - jupyterlite-pyodide-kernel >=0.7.2,<0.8
-  - notebook >=7.5
+  - jupyterlite-core >=0.6,<0.7
+  - jupyterlite-pyodide-kernel ==0.6.1

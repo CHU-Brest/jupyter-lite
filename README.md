@@ -1,83 +1,63 @@
-# JupyterLite — Python (Pyodide) & R (xeus)
+# JupyterLite — Python (Pyodide) avec DuckDB & Polars
 
-Site JupyterLite (interface **JupyterLab**) statique, avec deux kernels :
+Site JupyterLite (interface **JupyterLab**) statique, avec un kernel **Python
+(Pyodide)** incluant **DuckDB**, **Polars**, **pandas**, **numpy** et
+**pyarrow**.
 
-- **Python (Pyodide)** : `duckdb`, `polars`, `pandas`, `numpy`, etc. disponibles.
-  Les paquets sont chargés à la demande depuis le **CDN Pyodide (jsdelivr)** au
-  premier `import`.
-- **R (xeus-r)** : compilé en WebAssembly et **embarqué dans le site** au build.
+> 🔑 **Pourquoi Pyodide 0.27 ?** DuckDB et Polars ne sont disponibles que dans la
+> distribution **Pyodide 0.27** (ils ont été retirés à partir de Pyodide 0.28
+> pour des problèmes de build). La pile est donc épinglée :
+> `jupyterlite-pyodide-kernel 0.6.x` ↔ `jupyterlite-core 0.6.x` ↔ Pyodide 0.27.6.
 
-## Accès réseau : qui a besoin de quoi ?
+> ℹ️ **R n'est pas inclus.** Le kernel R (xeus-r) exige `jupyterlite-core ≥ 0.7`,
+> incompatible avec la pile Pyodide 0.27 nécessaire à DuckDB/Polars. Les deux ne
+> peuvent pas cohabiter dans un même site. (Possible via deux sites séparés si
+> besoin — demandez.)
+
+## Accès réseau
 
 | | Au **build** (GitHub Actions) | À l'**exécution** (navigateur) |
 |---|---|---|
-| **R (xeus-r)** | télécharge depuis emscripten-forge, **bundlé dans `dist/`** | rien (100% offline) |
-| **Python (Pyodide)** | rien | télécharge Pyodide + paquets depuis le **CDN jsdelivr** |
+| **Python (Pyodide)** | rien à télécharger | Pyodide + paquets depuis le **CDN jsdelivr** |
 
-> ✅ Le serveur (GitLab interne) n'a **jamais** besoin d'accéder à prefix.dev.
-> ⚠️ En revanche, pour le kernel **Python**, le **poste de l'utilisateur** doit
-> pouvoir joindre le CDN public `cdn.jsdelivr.net` (mais pas prefix.dev). Le
-> kernel **R** fonctionne lui totalement hors-ligne.
+> Le serveur (GitLab interne) sert seulement des fichiers statiques. En
+> revanche, le **poste de l'utilisateur** doit pouvoir joindre le CDN public
+> `cdn.jsdelivr.net` (pour charger Pyodide 0.27, DuckDB, Polars…).
 
-## Structure
+## Utiliser DuckDB / Polars
 
-| Fichier | Rôle |
-|---|---|
-| `environment-r.yml` | Paquets du kernel R (xeus-r) |
-| `jupyter_lite_config.json` | Indique à xeus le fichier d'environnement R |
-| `.github/build-environment.yml` | Dépendances de build (xeus + pyodide-kernel) |
-| `.github/workflows/deploy.yml` | Workflow GitHub Actions |
-| `content/` | Notebooks d'exemple inclus dans le site |
-
-Le kernel **Python (Pyodide)** est fourni par `jupyterlite-pyodide-kernel` ; il
-n'a pas de fichier d'environnement (les paquets viennent du CDN). Pour
-`duckdb` et `polars`, **installez-les d'abord** dans le notebook :
+Dans un notebook (kernel **Python (Pyodide)**) :
 
 ```python
 %pip install duckdb polars
 import duckdb, polars as pl
 ```
 
-> ⚠️ `import duckdb` seul **ne suffit pas** : DuckDB n'est pas auto-importable
-> dans Pyodide, il faut `%pip install duckdb` au préalable (piplite récupère le
-> *wheel* Pyodide de DuckDB). Voir la
-> [démo officielle DuckDB](https://duckdb.org/2024/10/02/pyodide).
+Voir le notebook d'exemple `content/demo-python-duckdb-polars.ipynb`.
 
-## Récupérer les fichiers statiques
+## Structure
 
-Le workflow `Build JupyterLite` se déclenche :
+| Fichier | Rôle |
+|---|---|
+| `.github/build-environment.yml` | Dépendances de build (pyodide-kernel 0.6.x) |
+| `.github/workflows/deploy.yml` | Workflow GitHub Actions |
+| `content/` | Notebooks d'exemple inclus dans le site |
 
-- automatiquement à chaque push sur `main` ;
-- manuellement via **Actions → Build JupyterLite → Run workflow**.
+Le kernel Python est fourni par `jupyterlite-pyodide-kernel` ; les paquets
+viennent du CDN Pyodide, il n'y a donc aucun fichier d'environnement à gérer.
 
-Il produit le site dans `dist/` puis :
+## Récupérer / déployer
 
-1. **Pousse le contenu sur la branche `gh-pages`** (réécrite à chaque build).
-2. **Publie un artefact `jupyterlite-static`** (zip téléchargeable).
+Le workflow `Build JupyterLite` (push sur `main` ou *Run workflow* manuel) :
 
-## Héberger sur GitHub Pages (optionnel)
+1. construit le site dans `dist/` ;
+2. **pousse le contenu sur la branche `gh-pages`** ;
+3. **publie un artefact `jupyterlite-static`** (zip téléchargeable).
 
-1. **Settings → Pages**
-2. **Source** : *Deploy from a branch*
-3. **Branch** : `gh-pages` / `(root)` → **Save**
+**GitHub Pages** : Settings → Pages → *Deploy from a branch* → `gh-pages` / `(root)`.
 
-## Importer dans le GitLab interne
-
-1. Récupérez les fichiers (clone de `gh-pages` ou artefact zip).
-2. Servez le contenu de façon statique (GitLab Pages, Nginx, etc.).
-3. Ouvrez `index.html` (ou `lab/index.html` pour aller directement dans Lab).
-
-> ℹ️ Sous un sous-chemin (ex. `https://gitlab.interne/groupe/projet/`), les
-> chemins relatifs de JupyterLite fonctionnent généralement tels quels. Sinon,
-> reconstruisez avec `jupyter lite build --base-url /groupe/projet/ …`.
-
-## Personnaliser
-
-- **R** : ajoutez des paquets `r-<nom>` dans `environment-r.yml` (s'ils existent
-  sur [emscripten-forge](https://emscripten-forge.org/)).
-- **Python** : aucun fichier à modifier — installez à la volée dans un notebook
-  via `import` (paquets de la distribution Pyodide) ou
-  `import piplite; await piplite.install("mon_paquet")`.
+**GitLab interne** : clonez `gh-pages` (ou téléchargez l'artefact) et servez les
+fichiers en statique. Ouvrez `index.html` (ou `lab/index.html`).
 
 ## Build local (optionnel)
 
@@ -87,7 +67,3 @@ micromamba activate build-env
 cp README.md content/
 jupyter lite build --contents content --output-dir dist
 ```
-
-> Note : Pyodide n'est **pas** embarqué (mode CDN). Pour un mode 100% offline
-> côté Python aussi, il faudrait embarquer la distribution Pyodide
-> (`--pyodide pyodide-0.29.3.tar.bz2`), ce qui alourdit fortement la sortie.
