@@ -1,0 +1,9 @@
+# Environnement du kernel R (xeus-r) compilé en WebAssembly.
+# Ajoutez ici les paquets R souhaités (préfixe r-, ex: r-ggplot2, r-dplyr)
+# s'ils sont disponibles sur emscripten-forge.
+name: r
+channels:
+  - https://repo.prefix.dev/emscripten-forge-dev
+  - https://repo.prefix.dev/conda-forge
+dependencies:
+  - xeus-r

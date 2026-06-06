@@ -1,0 +1,12 @@
+# Environnement utilisé UNIQUEMENT par le runner GitHub Actions pour lancer le
+# build. Ce n'est pas l'environnement des kernels (voir environment-*.yml).
+name: build-env
+channels:
+  - conda-forge
+dependencies:
+  - python
+  - pip
+  - jupyter_server
+  - jupyterlite-core >=0.7
+  - jupyterlite-xeus >=4.3
+  - notebook >=7.5

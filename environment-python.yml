@@ -1,0 +1,19 @@
+# Environnement du kernel Python (xeus-python) compilé en WebAssembly.
+# Tous ces paquets sont téléchargés depuis emscripten-forge AU MOMENT DU BUILD
+# et empaquetés dans dist/. Aucun accès réseau n'est nécessaire à l'exécution.
+name: python
+channels:
+  - https://repo.prefix.dev/emscripten-forge-dev
+  - https://repo.prefix.dev/conda-forge
+dependencies:
+  - xeus-python
+  - python
+  # --- Data / analytics ---
+  - duckdb
+  - polars
+  - pyarrow
+  - pandas
+  - numpy
+  # --- Visualisation / widgets ---
+  - matplotlib
+  - ipywidgets
