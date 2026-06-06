@@ -31,8 +31,17 @@ Site JupyterLite (interface **JupyterLab**) statique, avec deux kernels :
 
 Le kernel **Python (Pyodide)** est fourni par `jupyterlite-pyodide-kernel` ; il
 n'a pas de fichier d'environnement (les paquets viennent du CDN). Pour
-`duckdb`/`polars`, il suffit de faire `import duckdb` / `import polars` dans un
-notebook : Pyodide les charge automatiquement.
+`duckdb` et `polars`, **installez-les d'abord** dans le notebook :
+
+```python
+%pip install duckdb polars
+import duckdb, polars as pl
+```
+
+> ⚠️ `import duckdb` seul **ne suffit pas** : DuckDB n'est pas auto-importable
+> dans Pyodide, il faut `%pip install duckdb` au préalable (piplite récupère le
+> *wheel* Pyodide de DuckDB). Voir la
+> [démo officielle DuckDB](https://duckdb.org/2024/10/02/pyodide).
 
 ## Récupérer les fichiers statiques
 
