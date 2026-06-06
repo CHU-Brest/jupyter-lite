@@ -1,0 +1,32 @@
+# Publie sur GitLab Pages le contenu de la branche `gh-pages`
+# (générée par le workflow GitHub Actions qui build le site JupyterLite).
+#
+# Ce fichier vit sur la branche par défaut. Le job récupère le contenu de
+# `gh-pages` et le place dans `public/` (dossier attendu par GitLab Pages).
+
+stages:
+  - deploy
+
+pages:
+  stage: deploy
+  image: alpine:latest
+  rules:
+    # À chaque mise à jour de la branche par défaut (sync depuis GitHub)...
+    - if: '$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH'
+    # ...et possibilité de relancer manuellement (CI/CD > Pipelines > Run pipeline)
+    - if: '$CI_PIPELINE_SOURCE == "web"'
+  script:
+    - apk add --no-cache git
+    - rm -rf public && mkdir public
+    # Récupère uniquement la branche gh-pages depuis le dépôt GitLab
+    - git fetch --depth 1 origin gh-pages
+    # Extrait l'arborescence de gh-pages dans public/ (sans métadonnées git)
+    - git archive FETCH_HEAD | tar -x -C public
+  artifacts:
+    paths:
+      - public
+
+# Note : si la page s'affiche vide sous un sous-chemin
+# (https://<groupe>.gitlab.io/<projet>/), reconstruire le site GitHub avec
+#   jupyter lite build --contents content --output-dir dist --base-url /<projet>/
+# JupyterLite utilise des chemins relatifs et fonctionne en général tel quel.
