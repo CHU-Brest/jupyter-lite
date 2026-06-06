@@ -1,5 +1,10 @@
 # Environnement utilisé UNIQUEMENT par le runner GitHub Actions pour lancer le
-# build. Ce n'est pas l'environnement des kernels (voir environment-*.yml).
+# build. Ce n'est pas l'environnement des kernels.
+#
+# - jupyterlite-xeus           : construit le kernel R (xeus-r), bundlé offline
+# - jupyterlite-pyodide-kernel : ajoute le kernel Python (Pyodide, via CDN)
+#
+# Versions alignées : pyodide-kernel 0.7.x <-> jupyterlite-core 0.7.x <-> Pyodide 0.29.3
 name: build-env
 channels:
   - conda-forge
@@ -7,6 +12,7 @@ dependencies:
   - python
   - pip
   - jupyter_server
-  - jupyterlite-core >=0.7
+  - jupyterlite-core >=0.7.5,<0.8
   - jupyterlite-xeus >=4.3
+  - jupyterlite-pyodide-kernel >=0.7.2,<0.8
   - notebook >=7.5
